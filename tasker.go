@@ -9,7 +9,9 @@ import (
 )
 
 const (
-	BLANK = "\n"
+	newTask = iota
+	taskIndex
+	refresh
 )
 
 type task struct {
@@ -89,25 +91,55 @@ func stampActiveTask(tasks []*task) {
 	}
 }
 
+type inOut interface {
+	Scan() bool
+	Text() string
+}
+
+func parseInputCharacter(input string) (typeOfInput int, name string, idxActivate int) {
+	if len(input) < 1 {
+		return refresh, "", -1
+	}
+
+	taskIdxToStamp, err := strconv.Atoi(string(input[0]))
+
+	if err != nil {
+		return newTask, input, -1
+	} else {
+		return taskIndex, "", taskIdxToStamp
+	}
+}
+
+func inputHandler(scanner inOut, tasks []*task) (int, []*task) {
+	scanner.Scan()
+	input := scanner.Text()
+	previouslyActive := deactivateAll(tasks)
+
+	typeOfInput, name, idx := parseInputCharacter(input)
+
+	switch typeOfInput {
+	case newTask:
+		tasks = append(tasks, makeTask(name))
+		return len(tasks) - 1, tasks
+	case refresh:
+		return previouslyActive, tasks
+	default:
+		return idx, tasks
+	}
+}
+
 // TODO: add continuous logging and an inactive state
 func main() {
 	tasks := make([]*task, 0)
-	reader := bufio.NewReader(os.Stdin)
+	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
 		printTasks(tasks)
 		fmt.Print(">>  ")
-		input, _ := reader.ReadString('\n')
-		taskIdxToStamp, err := strconv.Atoi(string(input[0]))
-		previouslyActive := deactivateAll(tasks)
-		if err != nil && input != BLANK {
-			tasks = append(tasks, makeTask(input))
-			continue
-		} else if input == BLANK {
-			taskIdxToStamp = previouslyActive
-		}
-
+		taskIdxToStamp, tasks := inputHandler(scanner, tasks)
 		stampActiveTask(tasks)
-		tasks[taskIdxToStamp].stamp()
+		if len(tasks) > 0 {
+			tasks[taskIdxToStamp].stamp()
+		}
 	}
 }
