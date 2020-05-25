@@ -54,9 +54,11 @@ func printTasks(tasks []*task) {
 		if currTask.active() {
 			activeT = currTask
 			toPrint += "*"
+		} else {
+			toPrint += " "
 		}
 
-		toPrint += fmt.Sprintf("%d. %.2f %s", idx, currTask.cumulative, currTask.name)
+		toPrint += fmt.Sprintf("%d. %.2f %s\n", idx, currTask.cumulative, currTask.name)
 		cumulativeTotalTime += currTask.cumulative
 	}
 
@@ -96,6 +98,7 @@ type inOut interface {
 	Text() string
 }
 
+// Determine what type of input the user handed to the app.
 func parseInputCharacter(input string) (typeOfInput int, name string, idxActivate int) {
 	if len(input) < 1 {
 		return refresh, "", -1
@@ -110,6 +113,7 @@ func parseInputCharacter(input string) (typeOfInput int, name string, idxActivat
 	}
 }
 
+// Determine what task to activate and/or add a new task.
 func inputHandler(scanner inOut, tasks []*task) (int, []*task) {
 	scanner.Scan()
 	input := scanner.Text()
@@ -131,12 +135,13 @@ func inputHandler(scanner inOut, tasks []*task) (int, []*task) {
 // TODO: add continuous logging and an inactive state
 func main() {
 	tasks := make([]*task, 0)
+	var taskIdxToStamp int
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
 		printTasks(tasks)
 		fmt.Print(">>  ")
-		taskIdxToStamp, tasks := inputHandler(scanner, tasks)
+		taskIdxToStamp, tasks = inputHandler(scanner, tasks)
 		stampActiveTask(tasks)
 		if len(tasks) > 0 {
 			tasks[taskIdxToStamp].stamp()
