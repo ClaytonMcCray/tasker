@@ -69,3 +69,84 @@ func TestInputHandler(t *testing.T) {
 		t.Errorf("len(task list) is %d but should be %d", len(ts), 2)
 	}
 }
+
+func TestParseInputCharacter(t *testing.T) {
+	inputs := []string{
+		"a new task",
+		"",
+		"another new task",
+		"",
+		"1",
+	}
+
+	expectedTypeOfInputs := []int{
+		newTask,
+		refresh,
+		newTask,
+		refresh,
+		taskIndex,
+	}
+
+	expectedNames := []string{
+		"a new task",
+		"",
+		"another new task",
+		"",
+		"",
+	}
+
+	expectedActiveIdx := []int{
+		-1,
+		-1,
+		-1,
+		-1,
+		1,
+	}
+
+	for i, taskName := range inputs {
+		typeOf, name, active := parseInputCharacter(taskName)
+		if typeOf != expectedTypeOfInputs[i] {
+			t.Errorf("enum was %d but should be %d for %s", typeOf, expectedTypeOfInputs[i], name)
+		}
+
+		if name != expectedNames[i] {
+			t.Errorf("name was %s but should be %s", name, expectedNames[i])
+		}
+
+		if active != expectedActiveIdx[i] {
+			t.Errorf("activated index was %d but should be %d for %s", active,
+				expectedActiveIdx[i], name)
+		}
+	}
+}
+
+func TestSplitActiveInactive(t *testing.T) {
+	const (
+		act   = 100.0
+		inact = 150.0
+	)
+
+	aTsk := makeTask("active")
+	aTsk.cumulative = act
+
+	tmp1, tmp2 := splitActiveInactiveTime(aTsk)
+	if tmp1 != act {
+		t.Errorf("active value was %f but should be %f", tmp1, act)
+	}
+
+	if tmp2 != 0.0 {
+		t.Errorf("inavtice value was %f but should be %f", tmp2, 0.0)
+	}
+
+	inTsk := makeTask(inactiveTask)
+	inTsk.cumulative = inact
+
+	tmp1, tmp2 = splitActiveInactiveTime(inTsk)
+	if tmp1 != 0.0 {
+		t.Errorf("active value was %f but should be %f", tmp1, 0.0)
+	}
+
+	if tmp2 != inact {
+		t.Errorf("inavtice value was %f but should be %f", tmp2, inact)
+	}
+}

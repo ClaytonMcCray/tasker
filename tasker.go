@@ -14,6 +14,10 @@ const (
 	refresh
 )
 
+const (
+	inactiveTask = "inactive"
+)
+
 type task struct {
 	name       string
 	cumulative float64
@@ -46,10 +50,20 @@ func makeTask(name string) *task {
 	}
 }
 
+func splitActiveInactiveTime(t *task) (active, inactive float64) {
+	if t.name == inactiveTask {
+		return 0.0, t.cumulative
+	} else {
+		return t.cumulative, 0.0
+	}
+}
+
 func printTasks(tasks []*task) {
 	var activeT *task
 	var toPrint string
-	cumulativeTotalTime := 0.0
+	var cumulativeActive float64
+	var cumulativeInactive float64
+
 	for idx, currTask := range tasks {
 		if currTask.active() {
 			activeT = currTask
@@ -59,7 +73,9 @@ func printTasks(tasks []*task) {
 		}
 
 		toPrint += fmt.Sprintf("%d. %.2f %s\n", idx, currTask.cumulative, currTask.name)
-		cumulativeTotalTime += currTask.cumulative
+		tmpAct, tmpInact := splitActiveInactiveTime(currTask)
+		cumulativeActive += tmpAct
+		cumulativeInactive += tmpInact
 	}
 
 	if activeT == nil {
@@ -68,7 +84,7 @@ func printTasks(tasks []*task) {
 
 	fmt.Print(toPrint)
 	fmt.Printf("Active task was started on %s.\n", activeT.lastStart.Format(time.UnixDate))
-	fmt.Printf("Hours worked: %.2f.\n", cumulativeTotalTime)
+	fmt.Printf("Hours active: %.2f \tHours inactive: %.2f.\n", cumulativeActive, cumulativeInactive)
 }
 
 func deactivateAll(tasks []*task) int {
@@ -137,6 +153,8 @@ func main() {
 	tasks := make([]*task, 0)
 	var taskIdxToStamp int
 	scanner := bufio.NewScanner(os.Stdin)
+
+	tasks = append(tasks, makeTask(inactiveTask))
 
 	for {
 		printTasks(tasks)
