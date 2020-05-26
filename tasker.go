@@ -93,7 +93,7 @@ func clearTerminal() {
 	cmd := exec.Command("")
 	switch runtime.GOOS {
 	case "windows":
-		cmd = exec.Command("cls")
+		cmd = exec.Command("cmd", "/c", "cls")
 	default:
 		cmd = exec.Command("clear")
 	}
