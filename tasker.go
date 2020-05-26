@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
 	"strconv"
 	"time"
 )
@@ -87,6 +89,19 @@ func printTasks(tasks []*task) {
 	fmt.Printf("Hours active: %.2f \tHours inactive: %.2f.\n", cumulativeActive, cumulativeInactive)
 }
 
+func clearTerminal() {
+	cmd := exec.Command("")
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("cls")
+	default:
+		cmd = exec.Command("clear")
+	}
+
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+}
+
 func deactivateAll(tasks []*task) int {
 	activeIdx := 0
 	for idx, t := range tasks {
@@ -157,6 +172,7 @@ func main() {
 	tasks = append(tasks, makeTask(inactiveTask))
 
 	for {
+		clearTerminal()
 		printTasks(tasks)
 		fmt.Print(">>  ")
 		taskIdxToStamp, tasks = inputHandler(scanner, tasks)
